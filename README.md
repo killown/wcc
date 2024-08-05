@@ -1,3 +1,5 @@
+## Wayfire Control Center
+
 # install
 
 pip install flask
