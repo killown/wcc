@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wayfire Config Manager</title>
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Font Awesome CSS -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      .card {
+        cursor: pointer;
+      }
+      .card-header {
+        display: flex;
+        align-items: center;
+      }
+      .card-icon {
+        font-size: 24px;
+        margin-right: 10px;
+      }
+      .list-group-item {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .list-group-item strong {
+        margin-bottom: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container mt-5">
+      <h1 class="mb-4 text-center">Wayfire Config Manager</h1>
+      <h2 class="mb-4 text-center">Dashboard</h2>
+      <div class="row">
+        {% for section in config.sections() %}
+        <div class="col-md-4">
+          <div class="card mb-4">
+            <div
+              class="card-header"
+              data-toggle="collapse"
+              data-target="#collapse{{ loop.index }}"
+              aria-expanded="false"
+              aria-controls="collapse{{ loop.index }}"
+            >
+              <!-- Add icons for each section here -->
+              <i
+                class="fas card-icon {% if section == 'core' %} fa-cog {% elif section == 'output' %} fa-desktop {% elif section == 'input' %} fa-keyboard {% elif section == 'binding' %} fa-key {% elif 'plugin' in section %} fas-scale-balanced {% elif section == 'scale' %} fa-plug {% else %} fa-folder {% endif %}"
+              ></i>
+              <h5 class="mb-0">{{ section }}</h5>
+            </div>
+            <div id="collapse{{ loop.index }}" class="collapse">
+              <div class="card-body">
+                <div class="list-group">
+                  {% for option, value in config.items(section) %}
+                  <div class="list-group-item">
+                    <strong>{{ option }}</strong>
+                    <form
+                      action="{{ url_for('update_option') }}"
+                      method="post"
+                      class="form-inline"
+                      onsubmit="event.stopPropagation();"
+                    >
+                      <input
+                        type="hidden"
+                        name="section"
+                        value="{{ section }}"
+                      />
+                      <input type="hidden" name="option" value="{{ option }}" />
+                      <input
+                        type="text"
+                        name="value"
+                        class="form-control"
+                        value="{{ value }}"
+                        required
+                      />
+                    </form>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll('input[name="value"]').forEach((input) => {
+          input.addEventListener("blur", function (event) {
+            const form = event.target.closest("form");
+            const formData = new FormData(form);
+            fetch(form.action, {
+              method: form.method,
+              body: formData,
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.status !== "success") {
+                  alert("Failed to update configuration");
+                }
+              });
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
